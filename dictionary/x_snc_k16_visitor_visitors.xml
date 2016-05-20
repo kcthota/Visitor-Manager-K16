@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database>
+    <element label="Visitors" max_length="40" name="x_snc_k16_visitor_visitors" type="collection">
+        <element label="First Name" max_length="255" name="first_name" type="string"/>
+        <element label="Last Name" max_length="255" name="last_name" type="string"/>
+        <element label="Purpose" max_length="255" name="purpose" type="string"/>
+        <element label="Signed Out" max_length="40" name="signed_out" type="boolean"/>
+    </element>
+</database>

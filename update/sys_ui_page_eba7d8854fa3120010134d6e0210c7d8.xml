@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_ui_page">
+    <sys_ui_page action="INSERT_OR_UPDATE">
+        <category>general</category>
+        <client_script><![CDATA[var visitorManager = angular.module("visitors", ['ngRoute']);
+
+visitorManager.run(function ($http) {  
+     $http.defaults.headers.common['X-UserToken'] = window.userToken;  
+});
+
+visitorManager.config(['$routeProvider',
+    function($routeProvider) {
+        $routeProvider
+            .when('/', {
+                template: templates.getOperationsTemplate,
+                controller: 'operationsController'
+            })
+            .when('/signin', {
+                template: templates.getSignInTemplate,
+                controller: 'signInController'
+            })
+            .when('/signout', {
+                template: templates.getSignOutTemplate,
+                controller: 'signOutController'
+            })
+            .otherwise({
+                redirectTo: '/'
+            });
+    }
+]);
+
+visitorManager.factory('visitorFactory',['$http', function($http) {
+ 	return {
+  		addVisitor: function(payload) {
+    		return $http.post('/api/now/table/x_snc_k16_visitor_visitors', payload);
+  		},
+  		getVisitors: function() {
+    		return $http.get('/api/now/table/x_snc_k16_visitor_visitors?sysparm_query=signed_out=false');
+  		},
+		doSignOut: function(id) {
+  			var payload = {
+				"signed_out":true
+			};
+ 			return $http.put('/api/now/table/x_snc_k16_visitor_visitors/'+id, payload);
+		}
+	};
+}]);
+
+//Operations Controller
+visitorManager.controller('operationsController', ['$scope', '$location', function($scope, $location) {
+		$scope.doSignIn = function() {
+			$location.path("/signin");
+		};
+
+		$scope.doSignOut = function() {
+			$location.path("/signout");
+		};
+}]);
+
+//Sign In Controller
+visitorManager.controller('signInController', ['$scope', '$location', '$log', 'visitorFactory', function($scope, $location, $log, visitorFactory) {
+	$scope.firstName='';
+	$scope.lastName= '';
+	$scope.purpose='';
+	$scope.doCancel = function () {
+		$location.path("/");
+	};
+
+	$scope.doSubmit = function () {
+		var payload = {
+ 			'first_name': $scope.firstName,
+ 			'last_name': $scope.lastName,
+ 			'purpose':$scope.purpose
+		};
+		visitorFactory.addVisitor(payload).success(function(visitor){
+			$location.path("/");
+		}).error(function() {
+			alert('An error occurred while adding the user');
+		});
+	};
+}]);
+
+
+//SignOut Controller
+visitorManager.controller('signOutController', ['$scope', '$location', '$log', 'visitorFactory', function($scope, $location, $log, visitorFactory) {
+	$scope.visitors = [];
+ 	
+ 	$scope.doSignOut = function (id) {
+    	visitorFactory.doSignOut(id)
+       		.success(function () {
+          		$location.path("/");
+       		})
+       		.error(function () {
+            	alert('Error while signing out the user. Please retry');
+        	});
+ 	};
+
+ 	$scope.doCancel = function () {
+   		$location.path("/");
+ 	};
+ 	
+ 	visitorFactory.getVisitors()
+  		.success(function(response) {
+    		$scope.visitors = response.result;
+  		})
+  		.error(function() {
+     		alert('An error occurred while fetching visitors');
+  		});
+}]);
+
+
+
+
+//templates
+
+var templates = {
+	getOperationsTemplate: function() {
+		return '<div class="operations"><button type="button" class="btn btn-primary btn-lg btn-block" ng-click="doSignIn()">Visitor Sign In</button>\
+		<button type="button" class="btn btn-primary btn-lg btn-block" ng-click="doSignOut()">Visitor Sign Out</button></div>';
+	},
+	getSignOutTemplate: function() {
+	  	return '<div class="panel panel-primary">\
+	  		<div class="panel-heading">Visitor Sign Out</div>\
+	 		 <div class="panel-body">\
+			<table class="table table-striped"><tr><th>First Name</th><th>Last Name</th><th>Operation</th></tr><tr ng-repeat="visitor in visitors"><td>{{visitor.first_name}}</td><td>{{visitor.last_name}}</td><td><button type="button" class="btn btn-info btn-sm" ng-click="doSignOut(visitor.sys_id)">Sign Out</button></td></tr>\
+			<tr ng-if="visitors.length == 0"><td colspan="3">No Current Visitors</td></tr></table>\
+			<div><center><button type="button" class="btn btn-default" ng-click="doCancel()">Go back</button></center></div></div></div></div>';
+	},
+	getSignInTemplate: function() {
+		return '<form name="visitorForm" ng-submit="doSubmit()"><div class="panel panel-primary">\
+		  <div class="panel-heading">Visitor Sign In</div>\
+		  <div class="panel-body">\
+		    <div class="form-group">\
+		    <label for="firstName">First Name</label>\
+		    <input type="text" class="form-control" id="firstName" placeholder="First Name" ng-model="firstName">\
+		  </div>\
+		<div class="form-group">\
+		    <label for="lastName">Last Name</label>\
+		    <input type="text" class="form-control" id="lastName" placeholder="Last Name" ng-model="lastName">\
+		  </div>\
+		<div class="form-group">\
+		    <label for="purpose">Purpose of the Visit</label>\
+		    <input type="text" class="form-control" id="purpose" placeholder="Purpose of the Visit" ng-model="purpose">\
+		  </div>\
+		<div><center><button type="button" class="btn btn-default" ng-click="doCancel()">Cancel</button>&nbsp;<button type="submit" class="btn btn-primary">Submit</button></center></div>\
+		  </div>\
+		  </div>\
+		</div></form>';
+	}
+};]]></client_script>
+        <description/>
+        <direct>true</direct>
+        <endpoint>x_snc_k16_visitor_Visitor Manager.do</endpoint>
+        <html><![CDATA[<?xml version="1.0" encoding="utf-8" ?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/css/bootstrap.min.css"></link>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.12.3/jquery.min.js"></script>
+<script src="//code.angularjs.org/1.4.9/angular.js"></script>
+<script src="//code.angularjs.org/1.4.9/angular-route.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>
+<style>
+	.operations {
+		padding:70px 0px;
+	}
+
+	.logo {
+		max-height:30px;
+	}
+
+</style>
+<div ng-app="visitors">
+	<nav class="navbar navbar-inverse">
+  		<div class="container-fluid"> 
+			<div class="navbar-header">
+				<a class="navbar-brand" href="#">
+	   				<img class="logo" src="https://tpp.servicenow.com/images/logo/servicenow.png" /> Visitors
+				</a>
+			</div>
+  		</div>
+	</nav>
+	<div class="row">
+		<div class="col-md-offset-4 col-md-4" ng-view=""></div>
+	</div>
+</div>
+
+<g:evaluate object="true">
+    var session = gs.getSession(); 
+	var token = session.getSessionToken();
+</g:evaluate> 
+<script>   
+     window.userToken = "$[token]"; 
+</script>
+</j:jelly>]]></html>
+        <name>Visitor Manager</name>
+        <processing_script/>
+        <sys_class_name>sys_ui_page</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2016-05-20 17:38:05</sys_created_on>
+        <sys_customer_update>true</sys_customer_update>
+        <sys_id>eba7d8854fa3120010134d6e0210c7d8</sys_id>
+        <sys_mod_count>3</sys_mod_count>
+        <sys_name>Visitor Manager</sys_name>
+        <sys_package display_value="K16 Visitor Manager" source="x_snc_k16_visitor">730798c14fa3120010134d6e0210c707</sys_package>
+        <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
+        <sys_scope display_value="K16 Visitor Manager">730798c14fa3120010134d6e0210c707</sys_scope>
+        <sys_update_name>sys_ui_page_eba7d8854fa3120010134d6e0210c7d8</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2016-05-20 17:46:16</sys_updated_on>
+    </sys_ui_page>
+</record_update>
